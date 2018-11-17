@@ -1,11 +1,8 @@
-package com.aem.perfsword;
+package com.aemiot.android.perfsword;
 
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.support.annotation.Nullable;
-import android.support.v4.os.TraceCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.AppCompatDelegate;
 import android.support.v7.widget.AppCompatAutoCompleteTextView;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.AppCompatCheckBox;
@@ -19,8 +16,6 @@ import android.support.v7.widget.AppCompatRatingBar;
 import android.support.v7.widget.AppCompatSeekBar;
 import android.support.v7.widget.AppCompatSpinner;
 import android.support.v7.widget.AppCompatTextView;
-import android.support.v7.widget.ViewStubCompat;
-import android.text.Layout;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
@@ -28,20 +23,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.GridView;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.Space;
 import android.widget.Switch;
-import android.widget.TextView;
 
 import org.xmlpull.v1.XmlPullParser;
 
@@ -82,6 +71,7 @@ public class LayoutMonitor {
         mMap.put("Switch", Switch.class);
         mMap.put("CheckBox", AppCompatCheckBox.class);
         mMap.put("ViewStub", ViewStub.class);
+        mMap.put("View", View.class);
 
         mBlackSet.add("ViewStub");
     }

@@ -1,10 +1,18 @@
-package com.aem.perfsword;
+package com.aemiot.android.perfsword;
 
 import android.util.Log;
 
 @SuppressWarnings("unused")
 public class Monitor {
     public static long startTime = 0;
+
+    public static void layoutStart(String layoutName) {
+
+    }
+
+    public static void layoutEnd() {
+
+    }
 
     public static void measureStart() {
         startTime = System.currentTimeMillis();

@@ -1,4 +1,4 @@
-package com.aem.perfsword;
+package com.aemiot.android.perfsword;
 
 import android.content.Context;
 import android.graphics.Canvas;
