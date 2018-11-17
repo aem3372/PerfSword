@@ -1,6 +1,7 @@
 package com.aem.perfsword;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -117,18 +118,58 @@ public class MeasureViewGenerator  {
         /**
          * @Override
          * protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+         *     Monitor.meaureStart();
          *     super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+         *     Monitor.measureEnd(this);
          * }
          */
         method = generatedType.getMethod(TypeId.VOID, "onMeasure", TypeId.INT, TypeId.INT);
         Code code = dexMaker.declare(method, Modifier.PROTECTED);
-        Local<Integer> localWidthMeasureSpec = code.getParameter(0, TypeId.INT);
-        Local<Integer> localHeightMeasureSpec = code.getParameter(1, TypeId.INT);
-        MethodId logMethod = log.getMethod(TypeId.VOID, "monitor");
-        code.invokeStatic(logMethod, null);
+        MethodId monitorStartMethod = log.getMethod(TypeId.VOID, "measureStart");
+        code.invokeStatic(monitorStartMethod, null);
         MethodId supperMethod = supperType.getMethod(TypeId.VOID, "onMeasure", TypeId.INT, TypeId.INT);
-        code.invokeSuper(supperMethod, null, localThis, localWidthMeasureSpec, localHeightMeasureSpec);
+        code.invokeSuper(supperMethod, null, localThis, code.getParameter(0, TypeId.INT), code.getParameter(1, TypeId.INT));
+        MethodId monitorEndMethod = log.getMethod(TypeId.VOID, "measureEnd", TypeId.OBJECT);
+        code.invokeStatic(monitorEndMethod, null, code.getThis(generatedType));
         code.returnVoid();
 
+        /**
+         * @Override
+         * protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+         *     Monitor.layoutStart();
+         *     super.onMeasure(changed, left, top, right, bottom);
+         *     Monitor.layoutEnd(this);
+         * }
+         */
+        method = generatedType.getMethod(TypeId.VOID, "onLayout", TypeId.BOOLEAN, TypeId.INT, TypeId.INT, TypeId.INT, TypeId.INT);
+        code = dexMaker.declare(method, Modifier.PROTECTED);
+        MethodId layoutStartMethod = log.getMethod(TypeId.VOID, "layoutStart");
+        code.invokeStatic(layoutStartMethod, null);
+        supperMethod = supperType.getMethod(TypeId.VOID, "onLayout", TypeId.BOOLEAN, TypeId.INT, TypeId.INT, TypeId.INT, TypeId.INT);
+        code.invokeSuper(supperMethod, null, localThis, code.getParameter(0, TypeId.BOOLEAN),
+                code.getParameter(1, TypeId.INT), code.getParameter(2, TypeId.INT),
+                code.getParameter(3, TypeId.INT), code.getParameter(4, TypeId.INT));
+        MethodId layoutEndMethod = log.getMethod(TypeId.VOID, "layoutEnd", TypeId.OBJECT);
+        code.invokeStatic(layoutEndMethod, null, code.getThis(generatedType));
+        code.returnVoid();
+
+        /**
+         * @Override
+         * protected void onDraw(Canvas canvas) {
+         *     Monitor.drawStart();
+         *     super.onDraw(canvas);
+         *     Monitor.drawEnd(this);
+         * }
+         */
+        TypeId<Canvas> canvasType = TypeId.get(Canvas.class);
+        method = generatedType.getMethod(TypeId.VOID, "onDraw", canvasType);
+        code = dexMaker.declare(method, Modifier.PROTECTED);
+        MethodId drawStartMethod = log.getMethod(TypeId.VOID, "drawStart");
+        code.invokeStatic(drawStartMethod, null);
+        supperMethod = supperType.getMethod(TypeId.VOID, "onDraw", canvasType);
+        code.invokeSuper(supperMethod, null, localThis, code.getParameter(0, canvasType));
+        MethodId drawEndMethod = log.getMethod(TypeId.VOID, "drawEnd", TypeId.OBJECT);
+        code.invokeStatic(drawEndMethod, null, code.getThis(generatedType));
+        code.returnVoid();
     }
 }
