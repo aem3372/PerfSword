@@ -18,29 +18,42 @@ import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MeasureViewGenerator  {
+public class MeasureViewGenerator {
 
     private static ThreadLocal<Map<String, Class>> cacheMap = new ThreadLocal<Map<String, Class>>() {
         @Override
         protected Map<String, Class> initialValue() {
-            return new HashMap<String, Class>();
+            return new HashMap<>();
+        }
+    };
+
+    private static ThreadLocal<Map<Class, Constructor>> cacheConstructor = new ThreadLocal<Map<Class, Constructor>>() {
+        @Override
+        protected Map<Class, Constructor> initialValue() {
+            return new HashMap<>();
         }
     };
 
     public static View generatorObject(Class supperClz, Context context, AttributeSet attributeSet) {
+        Constructor constructor = cacheConstructor.get().get(supperClz);
+        if (constructor == null) {
+            try {
+                Class clz = generator(supperClz);
+                constructor = clz.getConstructor(Context.class, AttributeSet.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            }
+            cacheConstructor.get().put(supperClz, constructor);
+        }
         try {
-            Class clz = generator(supperClz);
-            Constructor constructor = clz.getConstructor(Context.class, AttributeSet.class);
             return (View) constructor.newInstance(context, attributeSet);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
+        } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (InvocationTargetException e) {
             e.printStackTrace();
@@ -118,15 +131,15 @@ public class MeasureViewGenerator  {
         /**
          * @Override
          * protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-         *     Monitor.meaureStart();
+         *     Monitor.meaureStart(this);
          *     super.onMeasure(widthMeasureSpec, heightMeasureSpec);
          *     Monitor.measureEnd(this);
          * }
          */
         method = generatedType.getMethod(TypeId.VOID, "onMeasure", TypeId.INT, TypeId.INT);
         Code code = dexMaker.declare(method, Modifier.PROTECTED);
-        MethodId monitorStartMethod = log.getMethod(TypeId.VOID, "measureStart");
-        code.invokeStatic(monitorStartMethod, null);
+        MethodId monitorStartMethod = log.getMethod(TypeId.VOID, "measureStart", TypeId.OBJECT);
+        code.invokeStatic(monitorStartMethod, null, code.getThis(generatedType));
         MethodId supperMethod = supperType.getMethod(TypeId.VOID, "onMeasure", TypeId.INT, TypeId.INT);
         code.invokeSuper(supperMethod, null, localThis, code.getParameter(0, TypeId.INT), code.getParameter(1, TypeId.INT));
         MethodId monitorEndMethod = log.getMethod(TypeId.VOID, "measureEnd", TypeId.OBJECT);
@@ -136,15 +149,15 @@ public class MeasureViewGenerator  {
         /**
          * @Override
          * protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-         *     Monitor.layoutStart();
+         *     Monitor.layoutStart(this);
          *     super.onMeasure(changed, left, top, right, bottom);
          *     Monitor.layoutEnd(this);
          * }
          */
         method = generatedType.getMethod(TypeId.VOID, "onLayout", TypeId.BOOLEAN, TypeId.INT, TypeId.INT, TypeId.INT, TypeId.INT);
         code = dexMaker.declare(method, Modifier.PROTECTED);
-        MethodId layoutStartMethod = log.getMethod(TypeId.VOID, "layoutStart");
-        code.invokeStatic(layoutStartMethod, null);
+        MethodId layoutStartMethod = log.getMethod(TypeId.VOID, "layoutStart", TypeId.OBJECT);
+        code.invokeStatic(layoutStartMethod, null, code.getThis(generatedType));
         supperMethod = supperType.getMethod(TypeId.VOID, "onLayout", TypeId.BOOLEAN, TypeId.INT, TypeId.INT, TypeId.INT, TypeId.INT);
         code.invokeSuper(supperMethod, null, localThis, code.getParameter(0, TypeId.BOOLEAN),
                 code.getParameter(1, TypeId.INT), code.getParameter(2, TypeId.INT),
@@ -156,7 +169,7 @@ public class MeasureViewGenerator  {
         /**
          * @Override
          * protected void onDraw(Canvas canvas) {
-         *     Monitor.drawStart();
+         *     Monitor.drawStart(this);
          *     super.onDraw(canvas);
          *     Monitor.drawEnd(this);
          * }
@@ -164,8 +177,8 @@ public class MeasureViewGenerator  {
         TypeId<Canvas> canvasType = TypeId.get(Canvas.class);
         method = generatedType.getMethod(TypeId.VOID, "onDraw", canvasType);
         code = dexMaker.declare(method, Modifier.PROTECTED);
-        MethodId drawStartMethod = log.getMethod(TypeId.VOID, "drawStart");
-        code.invokeStatic(drawStartMethod, null);
+        MethodId drawStartMethod = log.getMethod(TypeId.VOID, "drawStart", TypeId.OBJECT);
+        code.invokeStatic(drawStartMethod, null, code.getThis(generatedType));
         supperMethod = supperType.getMethod(TypeId.VOID, "onDraw", canvasType);
         code.invokeSuper(supperMethod, null, localThis, code.getParameter(0, canvasType));
         MethodId drawEndMethod = log.getMethod(TypeId.VOID, "drawEnd", TypeId.OBJECT);

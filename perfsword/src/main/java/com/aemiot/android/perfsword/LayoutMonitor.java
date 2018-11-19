@@ -1,6 +1,9 @@
 package com.aemiot.android.perfsword;
 
 import android.content.Context;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatAutoCompleteTextView;
@@ -19,10 +22,12 @@ import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
+import android.view.FrameMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
+import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.GridView;
 import android.widget.LinearLayout;
@@ -34,6 +39,7 @@ import android.widget.Switch;
 
 import org.xmlpull.v1.XmlPullParser;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -45,10 +51,14 @@ import java.util.Set;
 public class LayoutMonitor {
     public static final String TAG = "LayoutMonitor";
 
-    private Map<String, Class> mMap = new HashMap<>();
-    private Set<String> mBlackSet = new HashSet<>();
+    private static Map<String, Class> mMap = new HashMap<>();
+    private static Set<String> mBlackSet = new HashSet<>();
 
-    public LayoutMonitor() {
+    public static void addMapping(String key, Class clz) {
+        mMap.put(key, clz);
+    }
+
+    static {
         mMap.put("FrameLayout", FrameLayout.class);
         mMap.put("RelativeLayout", RelativeLayout.class);
         mMap.put("LinearLayout", LinearLayout.class);
@@ -74,10 +84,25 @@ public class LayoutMonitor {
         mMap.put("View", View.class);
 
         mBlackSet.add("ViewStub");
+        mBlackSet.add("Space");
+    }
+
+    public LayoutMonitor() {
+
+    }
+
+    public static void preload(Context context) {
+        long startTime = System.nanoTime();
+        for (Map.Entry<String, Class> entry : mMap.entrySet()) {
+            if (!mBlackSet.contains(entry.getKey())) {
+                MeasureViewGenerator.generatorObject(entry.getValue(), context, null);
+            }
+        }
+        Log.d(TAG, "preload|" + (System.nanoTime() - startTime));
     }
 
     private View measureView(String name, Context context, AttributeSet attrs) {
-        long startTime = System.currentTimeMillis();
+        Monitor.createViewStart(name);
         Class clz = mMap.get(name);
         if (clz == null) {
             try {
@@ -103,8 +128,7 @@ public class LayoutMonitor {
                 }
             }
             View view = MeasureViewGenerator.generatorObject(clz, context, attrs);
-            long time = System.currentTimeMillis() - startTime;
-            Log.e(TAG, "createView|" + name  + "|" + attrs.getAttributeCount()  + "|" + time);
+            Monitor.createViewEnd(name);
             return view;
         } else {
             throw new RuntimeException("not find class");
@@ -134,8 +158,11 @@ public class LayoutMonitor {
 
         @Override
         public View inflate(int resource, @Nullable ViewGroup root, boolean attachToRoot) {
-            Log.e(TAG, "inflate|" + getContext().getResources().getResourceName(resource));
-            return super.inflate(resource, root, attachToRoot);
+            String name = getContext().getResources().getResourceName(resource);
+            Monitor.inflateStart(name);
+            View view = super.inflate(resource, root, attachToRoot);
+            Monitor.inflateEnd(name);
+            return view;
         }
 
         @Override
@@ -145,6 +172,16 @@ public class LayoutMonitor {
     }
 
     public void apply(AppCompatActivity activity, boolean replace) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            activity.getWindow().addOnFrameMetricsAvailableListener(new Window.OnFrameMetricsAvailableListener() {
+                @Override
+                public void onFrameMetricsAvailable(Window window, FrameMetrics frameMetrics, int dropCountSinceLastInvocation) {
+                    Log.e(TAG, frameMetrics.)
+                }
+            }, new Handler(Looper.getMainLooper()));
+        }
+
+        long startTime = System.nanoTime();
         LayoutInflater layoutInflater;
         if (replace) {
             layoutInflater = new MonitorLayoutInflater(activity);
@@ -163,6 +200,7 @@ public class LayoutMonitor {
             layoutInflater = LayoutInflater.from(activity);
         }
         apply(layoutInflater);
+        Log.d(TAG, "apply|" + (System.nanoTime() - startTime));
     }
 
     public void apply(LayoutInflater layoutInflater) {
