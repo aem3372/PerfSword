@@ -9,3 +9,5 @@
 /build
 /captures
 .externalNativeBuild
+/app/src/main/res/layout/item_test_1.xml
+/app/src/main/res/layout/item_test_2.xml
