@@ -81,6 +81,14 @@ public class ListActivity extends AppCompatActivity {
                 recyclerView.getAdapter().notifyDataSetChanged();
             }
         }, 0);
+
+
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                recyclerView.getAdapter().notifyDataSetChanged();
+            }
+        }, 4000);
     }
     private static class ItemViewHolder extends RecyclerView.ViewHolder {
 

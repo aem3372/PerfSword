@@ -172,15 +172,6 @@ public class LayoutMonitor {
     }
 
     public void apply(AppCompatActivity activity, boolean replace) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            activity.getWindow().addOnFrameMetricsAvailableListener(new Window.OnFrameMetricsAvailableListener() {
-                @Override
-                public void onFrameMetricsAvailable(Window window, FrameMetrics frameMetrics, int dropCountSinceLastInvocation) {
-                    Log.e(TAG, frameMetrics.)
-                }
-            }, new Handler(Looper.getMainLooper()));
-        }
-
         long startTime = System.nanoTime();
         LayoutInflater layoutInflater;
         if (replace) {
