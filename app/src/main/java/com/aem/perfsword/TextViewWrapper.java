@@ -20,7 +20,7 @@ public class TextViewWrapper extends AppCompatTextView {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        Log.e("ViewTreeLog", "" + widthMeasureSpec + "|" + heightMeasureSpec);
+        Log.e("TextViewWrapper", "" + widthMeasureSpec + "|" + heightMeasureSpec);
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 }

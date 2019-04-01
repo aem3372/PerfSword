@@ -15,13 +15,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
+import android.util.Pair;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.aemiot.android.perfsword.LayoutMonitor;
-import com.aemiot.android.perfsword.async.ViewTreeLog;
+import com.aemiot.android.perfsword.async.ViewLayoutUtils;
+
+import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -49,16 +50,31 @@ public class MainActivity extends AppCompatActivity {
                         view.measure(
                                 View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
                                 View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.AT_MOST));
-                        Log.e("ViewTreeLog", "measure1:" + (SystemClock.elapsedRealtime() - startTime1));
-                        ViewTreeLog.printMeasureValue(view, null);
-
-                        test(view, width, height);
+                        Log.e("ViewLayoutUtils", "measure1:" + (SystemClock.elapsedRealtime() - startTime1));
+                        ViewLayoutUtils.printLayoutParams(view, null);
+                        ViewLayoutUtils.replaceLayoutParams(view, new HashMap<View, Pair<Integer, Integer>>());
+                        ViewLayoutUtils.printLayoutParams(view, null);
+                        startTime1 = SystemClock.elapsedRealtime();
+                        view.measure(
+                                View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+                                View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.AT_MOST));
+                        Log.e("ViewLayoutUtils", "measure2:" + (SystemClock.elapsedRealtime() - startTime1));
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                ViewGroup viewGroup = findViewById(R.id.user_root);
+                                viewGroup.addView(view);
+                            }
+                        });
                     }
                 });
             }
         });
     }
 
+    /**
+     * 用于测试多次measure，Cache是否生效
+     * */
     private void test(final View view, final int width, final int height) {
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
@@ -67,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
                 view.measure(
                         View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
                         View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.AT_MOST));
-                Log.e("ViewTreeLog", "measure2:" + (SystemClock.elapsedRealtime() - startTime2));
+                Log.e("ViewLayoutUtils", "measure2:" + (SystemClock.elapsedRealtime() - startTime2));
                 test(view, width, height);
             }
         }, 5000L);
